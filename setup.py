@@ -24,24 +24,24 @@ are:
 from setuptools import setup, find_packages
 
 setup(
-    name = 'Pygments',
-    version = '2.5.2',
-    url = 'http://pygments.org/',
-    license = 'BSD License',
-    author = 'Georg Brandl',
-    author_email = 'georg@python.org',
-    description = 'Pygments is a syntax highlighting package written in Python.',
-    long_description = __doc__,
-    keywords = 'syntax highlighting',
-    packages = find_packages(exclude=['tests']),
-    entry_points = {
+    name='Pygments',
+    version='2.5.2.1',
+    url='http://pygments.org/',
+    license='BSD License',
+    author='Georg Brandl',
+    author_email='georg@python.org',
+    description='Pygments is a syntax highlighting package written in Python.',
+    long_description=__doc__,
+    keywords='syntax highlighting',
+    packages=find_packages(exclude=['tests']),
+    entry_points={
         'console_scripts': ['pygmentize = pygments.cmdline:main'],
     },
-    platforms = 'any',
-    zip_safe = False,
-    include_package_data = True,
+    platforms='any',
+    zip_safe=False,
+    include_package_data=True,
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
-    classifiers = [
+    classifiers=[
         'License :: OSI Approved :: BSD License',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
