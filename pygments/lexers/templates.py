@@ -2280,3 +2280,31 @@ class Angular2HtmlLexer(DelegatingLexer):
 
     def __init__(self, **options):
         super(Angular2HtmlLexer, self).__init__(HtmlLexer, Angular2Lexer, **options)
+
+
+class SqlJinjaLexer(DelegatingLexer):
+    """
+    Templated SQL lexer.
+
+    .. versionadded:: 2.13
+    """
+
+    name = 'SQL+Jinja'
+    aliases = ['sql+jinja']
+    filenames = ['*.sql', '*.sql.j2', '*.sql.jinja2']
+
+    def __init__(self, **options):
+        super().__init__(SqlLexer, DjangoLexer, **options)
+
+    def analyse_text(text):
+        rv = 0.0
+        # dbt's ref function
+        if re.search(r'\{\{\s*ref\(.*\)\s*\}\}', text):
+            rv += 0.4
+        # dbt's source function
+        if re.search(r'\{\{\s*source\(.*\)\s*\}\}', text):
+            rv += 0.25
+        # Jinja macro
+        if re.search(r'\{%-?\s*macro \w+\(.*\)\s*-?%\}', text):
+            rv += 0.15
+        return rv
