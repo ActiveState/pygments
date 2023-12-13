@@ -6,6 +6,12 @@ Since 2.5.0, issue numbers refer to the tracker at
 pull request numbers to the requests at
 <https://github.com/pygments/pygments/pulls>.
 
+Version 2.5.2.2
+-------------
+(released December 13, 2023)
+
+- Catastrophic backtracking on Java's properties Lexer (#2356), CVE-2022-40896
+
 Version 2.5.2.1
 -------------
 (released TBD)
