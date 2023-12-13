@@ -113,14 +113,42 @@ class PropertiesLexer(RegexLexer):
 
     tokens = {
         'root': [
-            (r'^(\w+)([ \t])(\w+\s*)$', bygroups(Name.Attribute, Text, String)),
-            (r'^\w+(\\[ \t]\w*)*$', Name.Attribute),
-            (r'(^ *)([#!].*)', bygroups(Text, Comment)),
-            # More controversial comments
-            (r'(^ *)((?:;|//).*)', bygroups(Text, Comment)),
-            (r'(.*?)([ \t]*)([=:])([ \t]*)(.*(?:(?<=\\)\n.*)*)',
-             bygroups(Name.Attribute, Text, Operator, Text, String)),
-            (r'\s', Text),
+            # comments
+            (r'[!#].*|/{2}.*', Comment.Single),
+            # ending a comment or whitespace-only line
+            (r'\n', Whitespace),
+            # eat whitespace at the beginning of a line
+            (r'^[^\S\n]+', Whitespace),
+            # start lexing a key
+            default('key'),
+        ],
+        'key': [
+            # non-escaped key characters
+            (r'[^\\:=\s]+', Name.Attribute),
+            # escapes
+            include('escapes'),
+            # separator is the first non-escaped whitespace or colon or '=' on the line;
+            # if it's whitespace, = and : are gobbled after it
+            (r'([^\S\n]*)([:=])([^\S\n]*)',
+             bygroups(Whitespace, Operator, Whitespace),
+             ('#pop', 'value')),
+            (r'[^\S\n]+', Whitespace, ('#pop', 'value')),
+            # maybe we got no value after all
+            (r'\n', Whitespace, '#pop'),
+        ],
+        'value': [
+            # non-escaped value characters
+            (r'[^\\\n]+', String),
+            # escapes
+            include('escapes'),
+            # end the value on an unescaped newline
+            (r'\n', Whitespace, '#pop'),
+        ],
+        'escapes': [
+            # line continuations; these gobble whitespace at the beginning of the next line
+            (r'(\\\n)([^\S\n]*)', bygroups(String.Escape, Whitespace)),
+            # other escapes
+            (r'\\(.|\n)', String.Escape),
         ],
     }
 
