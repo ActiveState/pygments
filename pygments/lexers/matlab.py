@@ -11,13 +11,41 @@
 
 import re
 
-from pygments.lexer import Lexer, RegexLexer, bygroups, words, do_insertions
+from pygments.lexer import Lexer, RegexLexer, bygroups, default, words, \
+    do_insertions
 from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
     Number, Punctuation, Generic, Whitespace
 
 from pygments.lexers import _scilab_builtins
 
 __all__ = ['MatlabLexer', 'MatlabSessionLexer', 'OctaveLexer', 'ScilabLexer']
+
+
+# The function-definition signature, shared by the Matlab, Octave and Scilab
+# lexers (which all use the same syntax).  Tokenised incrementally rather
+# than with a single regex: the single-regex version had cubic worst-case
+# complexity, so `function` followed by a few kilobytes of spaces took
+# minutes to lex (CVE-2021-27291).
+_deffunc = [
+    (r'[ \t]+', Whitespace),
+    (r'\.\.\..*?\n', Comment),  # line continuation
+    # output argument(s): `[a, b] =` (may span continuations) or `y =`
+    (r'(\[)([^\]]*)(\])([ \t]*)(=)',
+     bygroups(Punctuation, Text, Punctuation, Whitespace, Punctuation)),
+    (r'([a-zA-Z_]\w*)([ \t]*)(=)(?!=)',
+     bygroups(Text, Whitespace, Punctuation)),
+    (r'[a-zA-Z_]\w*', Name.Function),  # function name
+    (r'\(', Punctuation, 'deffunc_args'),
+    (r'\n', Whitespace, '#pop'),  # end of a no-argument-list signature
+    default('#pop'),
+]
+
+_deffunc_args = [
+    (r'\.\.\..*?\n', Comment),  # line continuation
+    (r'\)', Punctuation, '#pop:2'),
+    (r'[^)\n.]+', Text),
+    (r'[.\n]', Text),
+]
 
 
 class MatlabLexer(RegexLexer):
@@ -135,14 +163,8 @@ class MatlabLexer(RegexLexer):
             (r'^.*\n', Comment.Multiline),
             (r'.', Comment.Multiline),
         ],
-        'deffunc': [
-            (r'(\s*)(?:(\S+)(\s*)(=)(\s*))?(.+)(\()(.*)(\))(\s*)',
-             bygroups(Whitespace, Text, Whitespace, Punctuation,
-                      Whitespace, Name.Function, Punctuation, Text,
-                      Punctuation, Whitespace), '#pop'),
-            # function with no args
-            (r'(\s*)([a-zA-Z_]\w*)', bygroups(Text, Name.Function), '#pop'),
-        ],
+        'deffunc': _deffunc,
+        'deffunc_args': _deffunc_args,
         'string': [
             (r"[^']*'", String, '#pop'),
         ],
@@ -612,14 +634,8 @@ class OctaveLexer(RegexLexer):
         'string': [
             (r"[^']*'", String, '#pop'),
         ],
-        'deffunc': [
-            (r'(\s*)(?:(\S+)(\s*)(=)(\s*))?(.+)(\()(.*)(\))(\s*)',
-             bygroups(Whitespace, Text, Whitespace, Punctuation,
-                      Whitespace, Name.Function, Punctuation, Text,
-                      Punctuation, Whitespace), '#pop'),
-            # function with no args
-            (r'(\s*)([a-zA-Z_]\w*)', bygroups(Text, Name.Function), '#pop'),
-        ],
+        'deffunc': _deffunc,
+        'deffunc_args': _deffunc_args,
     }
 
 
@@ -680,12 +696,6 @@ class ScilabLexer(RegexLexer):
             (r"[^']*'", String, '#pop'),
             (r'.', String, '#pop'),
         ],
-        'deffunc': [
-            (r'(\s*)(?:(\S+)(\s*)(=)(\s*))?(.+)(\()(.*)(\))(\s*)',
-             bygroups(Whitespace, Text, Whitespace, Punctuation,
-                      Whitespace, Name.Function, Punctuation, Text,
-                      Punctuation, Whitespace), '#pop'),
-            # function with no args
-            (r'(\s*)([a-zA-Z_]\w*)', bygroups(Text, Name.Function), '#pop'),
-        ],
+        'deffunc': _deffunc,
+        'deffunc_args': _deffunc_args,
     }
