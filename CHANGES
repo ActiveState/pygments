@@ -6,6 +6,21 @@ Since 2.5.0, issue numbers refer to the tracker at
 pull request numbers to the requests at
 <https://github.com/pygments/pygments/pulls>.
 
+Version 2.5.2.post3
+-------------------
+(released August 13, 2026)
+
+- Fix several lexer regexes with exponential or cubic worst-case
+  complexity (#1675), CVE-2021-27291.  Backport of upstream 2.7.4; affects
+  the ADL/CADL/ODIN, Ceylon, Evoque, Factor, Logos, Matlab/Octave/Scilab
+  and Varnish VCL lexers.
+
+- Lex Matlab/Octave/Scilab function signatures incrementally instead of
+  with a single regex, so the CVE-2021-27291 payload for those lexers is
+  linear rather than merely cheaper.  Upstream made this change later and
+  separately (PR#3164), so it is not part of the CVE's own fix.  Line
+  continuations inside a function signature are now handled as well.
+
 Version 2.5.2.2
 -------------
 (released December 13, 2023)
