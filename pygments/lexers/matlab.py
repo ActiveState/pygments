@@ -136,7 +136,7 @@ class MatlabLexer(RegexLexer):
             (r'.', Comment.Multiline),
         ],
         'deffunc': [
-            (r'(\s*)(?:(.+)(\s*)(=)(\s*))?(.+)(\()(.*)(\))(\s*)',
+            (r'(\s*)(?:(\S+)(\s*)(=)(\s*))?(.+)(\()(.*)(\))(\s*)',
              bygroups(Whitespace, Text, Whitespace, Punctuation,
                       Whitespace, Name.Function, Punctuation, Text,
                       Punctuation, Whitespace), '#pop'),
@@ -613,7 +613,7 @@ class OctaveLexer(RegexLexer):
             (r"[^']*'", String, '#pop'),
         ],
         'deffunc': [
-            (r'(\s*)(?:(.+)(\s*)(=)(\s*))?(.+)(\()(.*)(\))(\s*)',
+            (r'(\s*)(?:(\S+)(\s*)(=)(\s*))?(.+)(\()(.*)(\))(\s*)',
              bygroups(Whitespace, Text, Whitespace, Punctuation,
                       Whitespace, Name.Function, Punctuation, Text,
                       Punctuation, Whitespace), '#pop'),
@@ -681,7 +681,7 @@ class ScilabLexer(RegexLexer):
             (r'.', String, '#pop'),
         ],
         'deffunc': [
-            (r'(\s*)(?:(.+)(\s*)(=)(\s*))?(.+)(\()(.*)(\))(\s*)',
+            (r'(\s*)(?:(\S+)(\s*)(=)(\s*))?(.+)(\()(.*)(\))(\s*)',
              bygroups(Whitespace, Text, Whitespace, Punctuation,
                       Whitespace, Name.Function, Punctuation, Text,
                       Punctuation, Whitespace), '#pop'),
