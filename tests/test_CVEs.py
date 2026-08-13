@@ -6,6 +6,7 @@
     :license: BSD, see LICENSE for details.
 """
 
+import os
 import time
 
 import pytest
@@ -13,6 +14,28 @@ import pytest
 from pygments import highlight
 from pygments.lexers import SMLLexer, get_lexer_by_name
 from pygments.formatters import HtmlFormatter
+
+
+def _pick_timer():
+    """A monotonically increasing clock, in seconds.
+
+    `time.time()` is not usable here: it can jump backwards when the system
+    clock is adjusted, which was observed on the machine these budgets were
+    measured on.  `time.monotonic()` would do but is Python 3.3+, and
+    `time.clock()` is gone in Python 3.8 (and deprecated before that, which
+    pytest.ini turns into an error).  So on Python 2.7 fall back to process
+    CPU time, which cannot go backwards and is anyway the thing a ReDoS
+    actually burns.
+    """
+    monotonic = getattr(time, 'monotonic', None)
+    if monotonic is not None:
+        return monotonic
+    if any(os.times()[:2]):  # POSIX; zero on some other platforms
+        return lambda: sum(os.times()[:2])
+    return time.time
+
+
+_timer = _pick_timer()
 
 
 def test_CVE_2021_20270():
@@ -49,9 +72,10 @@ _REDOS_TIME_LIMIT = 5.0
 @pytest.mark.parametrize('alias, payload', _REDOS_PAYLOADS)
 def test_CVE_2021_27291(alias, payload):
     lexer = get_lexer_by_name(alias)
-    start = time.time()
-    list(lexer.get_tokens(payload))
-    elapsed = time.time() - start
+    start = _timer()
+    for _ in lexer.get_tokens(payload):  # drained, not collected
+        pass
+    elapsed = _timer() - start
     assert elapsed < _REDOS_TIME_LIMIT, \
         'the %s lexer took %.1fs on the CVE-2021-27291 payload' % (
             alias, elapsed)
