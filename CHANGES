@@ -6,6 +6,14 @@ Since 2.5.0, issue numbers refer to the tracker at
 pull request numbers to the requests at
 <https://github.com/pygments/pygments/pulls>.
 
+Version 2.5.2.post4
+-------------------
+(released November 20, 2026)
+
+- Bound the ADL metadata GUID and archetype id regexes so a long run of
+  word characters cannot make them backtrack, CVE-2026-4539.  Backport of
+  upstream 2.20.0.
+
 Version 2.5.2.post3
 -------------------
 (released August 13, 2026)
