@@ -79,3 +79,49 @@ def test_CVE_2021_27291(alias, payload):
     assert elapsed < _REDOS_TIME_LIMIT, \
         'the %s lexer took %.1fs on the CVE-2021-27291 payload' % (
             alias, elapsed)
+
+
+# CVE-2026-4539: the ADL metadata GUID rule and the archetype id rule used
+# unbounded repeats, so each failed match attempt on a long run of word
+# characters backtracked over the whole run.  Scanning the rule at every
+# offset of a 20000-character run took about 7s before the fix.
+def _rule_matchers(lexer_cls, state, token):
+    lexer_cls()  # compiles _tokens
+    return [m for m, action, _ in lexer_cls._tokens[state] if action is token]
+
+
+def _scan_time(matchers, text):
+    start = _timer()
+    for match in matchers:
+        for pos in range(len(text)):
+            match(text, pos)
+    return _timer() - start
+
+
+def test_CVE_2026_4539_guid_rule_is_bounded():
+    from pygments.lexers.archetype import AdlLexer
+    from pygments.token import Literal
+    matchers = _rule_matchers(AdlLexer, 'metadata', Literal)
+    elapsed = _scan_time(matchers, 'a' * 20000)
+    assert elapsed < 1.0, 'GUID rule scan took %.1fs' % elapsed
+
+
+def test_CVE_2026_4539_archetype_id_rule_is_bounded():
+    from pygments.lexers.archetype import AdlLexer
+    from pygments.token import Name
+    matchers = _rule_matchers(AdlLexer, 'root', Name.Decorator)
+    assert matchers
+    elapsed = _scan_time(matchers, 'a' * 20000)
+    assert elapsed < 1.0, 'archetype id rule scan took %.1fs' % elapsed
+
+
+def test_CVE_2026_4539_still_lexes_guids_and_ids():
+    from pygments.lexers.archetype import AdlLexer
+    from pygments.token import Literal, Name
+    code = ('archetype (adl_version=1.4; '
+            'uid=f2b2a6-2a04-4b6a-9c3e-0f2b4b1e7c5d)\n'
+            '    openEHR-EHR-OBSERVATION.blood_pressure.v1\n')
+    tokens = list(AdlLexer().get_tokens(code))
+    assert (Literal, 'f2b2a6-2a04-4b6a-9c3e-0f2b4b1e7c5d') in tokens
+    assert (Name.Decorator,
+            '    openEHR-EHR-OBSERVATION.blood_pressure.v1') in tokens
